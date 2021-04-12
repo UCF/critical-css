@@ -1,5 +1,9 @@
 {
     "args": {
+        "exclude": [
+            "style#critical-css",
+            "link[rel='stylesheet'][href^='//cloud.typography.com/']"
+        ],
         "dimensions": [
             {
                 "height": 900,
