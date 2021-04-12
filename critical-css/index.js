@@ -16,8 +16,7 @@ module.exports = function(context, req) {
     },
   };
 
-  const requestBody = req.body.Records[0].body;
-  const args = requestBody.args || {};
+  const args = req.body.args || {};
   const dimensions = args.dimensions || [];
 
   // If we're missing html, back out early

@@ -108,3 +108,7 @@ build/*
 *.pbxuser
 *.xcworkspace
 xcuserdata
+
+# Azurite
+__azurite*
+__queuestorage__

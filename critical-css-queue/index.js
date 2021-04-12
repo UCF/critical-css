@@ -3,11 +3,27 @@
 const cheerio = require('cheerio');
 const critical = require('critical');
 
-module.exports = async function (context, myQueueItem) {
-  const requestBody = myQueueItem.Records[0].body;
-  const args = requestBody.args;
+module.exports = function (context, myQueueItem) {
+  const args = myQueueItem.args;
 
-  critical(args, (err, { css }) => {
+  const criticalArgs = {
+    inline: false,
+    extract: false,
+    minify: false,
+    dimensions: args.dimensions,
+    ignore: {
+      atrule: ['@font-face'] // never include font-face declarations in our critical CSS
+    },
+    penthouse: {
+      timeout: 60000 // milliseconds/1 minute
+    }
+  };
+
+  criticalArgs.html = prepareHTML(args.html, args);
+
+  critical.generate(
+    criticalArgs,
+    (err, { css }) => {
     if (err) {
       context.error(err);
     } else {
