@@ -17,13 +17,22 @@ module.exports = function(context, req) {
   };
 
   const requestBody = req.body.Records[0].body;
-  const args = requestBody.args;
+  const args = requestBody.args || {};
+  const dimensions = args.dimensions || [];
+
+  // If we're missing html, back out early
+  if (! args.hasOwnProperty('html')) {
+    response.status = 500;
+    response.body.result = 'Could not generate critical CSS--no HTML provided';
+    context.res = response;
+    context.done();
+  }
 
   const criticalArgs = {
     inline: false,
     extract: false,
-    minify: false,
-    dimensions: args.dimensions,
+    minify: true,
+    dimensions: dimensions,
     ignore: {
       atrule: ['@font-face'] // never include font-face declarations in our critical CSS
     },
@@ -64,7 +73,7 @@ module.exports = function(context, req) {
 
   // Strip elements by CSS selector in source.exclude
   // so that Critical is forced to ignore them
-  if (args.exclude) {
+  if (args.hasOwnProperty('exclude')) {
     args.exclude.forEach((ignoreRule) => {
       const $ignoreElem = $(ignoreRule);
       if ($ignoreElem.length) {
