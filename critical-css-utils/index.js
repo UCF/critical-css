@@ -1,38 +1,31 @@
 'use strict';
 
-const critical = require('../critical-css-utils');
+const cheerio = require('cheerio');
+const critical = require('critical');
 
-module.exports = function(context, req) {
-  let response = {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-      'Content-type': 'application/json'
+/**
+ * Helper function that runs the critical generation
+ * @param {*} args The arguments to pass to critical
+ * @param {function} cb The callback function
+ */
+module.exports = function(args, cb) {
+  const criticalArgs = {
+    inline: false,
+    extract: false,
+    minify: false,
+    dimensions: args.dimensions,
+    ignore: {
+      atrule: ['@font-face'] // never include font-face declarations in our critical CSS
     },
-    body: {
-      result: null,
-      input: req,
-    },
+    penthouse: {
+      timeout: 60000 // milliseconds/1 minute
+    }
   };
 
-  const requestBody = req.body.Records[0].body;
-  const args = requestBody.args;
+  criticalArgs.html = sanitizeHTML(args.html, args);
 
-  critical(args, (err, { css }) => {
-    if (err) {
-      context.error(err);
-      response.status = 500;
-      response.body.result = err;
-      context.res = response;
-    } else {
-      response.body.result = css;
-      context.res = response;
-    }
-
-    context.done();
-  });
-};
-
+  critical.generate(criticalArgs, cb);
+}
 
 /**
  * TODO
@@ -41,7 +34,7 @@ module.exports = function(context, req) {
  * @param {object} args Arguments passed in to the request
  * @returns {string} Processed HTML
  */
-function sanitizeHTML(html, args) {
+ function sanitizeHTML(html, args) {
   // Load document into Cheerio for easier DOM processing/traversal
   const $ = cheerio.load(html);
 
