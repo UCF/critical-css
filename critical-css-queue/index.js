@@ -3,11 +3,11 @@
 const cheerio = require('cheerio');
 const critical = require('critical');
 
-module.exports = async function (context, myQueueItem) {
+module.exports = function (context, myQueueItem) {
   const requestBody = myQueueItem.Records[0].body;
   const args = requestBody.args;
 
-  critical(args, (err, { css }) => {
+  critical.generate(args, (err, { css }) => {
     if (err) {
       context.error(err);
     } else {
