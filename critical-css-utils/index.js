@@ -3,7 +3,6 @@
 const cheerio = require('cheerio');
 const critical = require('critical');
 
-
 /**
  * Helper function that performs critical CSS generation
  *
