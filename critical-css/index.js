@@ -31,7 +31,7 @@ module.exports = function(context, req) {
     }
   };
 
-  criticalArgs.html = sanitizeHTML(args.html, args);
+  criticalArgs.html = prepareHTML(args.html, args);
 
   critical.generate(
     criticalArgs,
@@ -53,32 +53,23 @@ module.exports = function(context, req) {
 
 
 /**
- * TODO
+ * Prepares HTML to be passed to Critical.
  *
  * @param {string} html HTML string
  * @param {object} args Arguments passed in to the request
  * @returns {string} Processed HTML
  */
-function sanitizeHTML(html, args) {
+function prepareHTML(html, args) {
   // Load document into Cheerio for easier DOM processing/traversal
   const $ = cheerio.load(html);
 
-  // Remove existing inline critical CSS
-  // TODO this needs to be made a configurable option
-  const $existingCriticalCSS = $('style#critical-css');
-  if ($existingCriticalCSS.length) {
-    $existingCriticalCSS.remove();
-  }
-
-  // Strip stylesheets whose hrefs are found in
-  // source.ignoreStylesheets, because Critical
-  // apparently can't do this on its own
-  // TODO should probably update this to allow the entire CSS selector to be configurable per stylesheet
-  if (args.ignoreStylesheets) {
-    args.ignoreStylesheets.forEach((ignoreRule) => {
-      const $ignoreStylesheets = $(`link[rel="stylesheet"][href^="${ignoreRule}"]`);
-      if ($ignoreStylesheets.length) {
-        $ignoreStylesheets.remove();
+  // Strip elements by CSS selector in source.exclude
+  // so that Critical is forced to ignore them
+  if (args.exclude) {
+    args.exclude.forEach((ignoreRule) => {
+      const $ignoreElem = $(ignoreRule);
+      if ($ignoreElem.length) {
+        $ignoreElem.remove();
       }
     });
   }
@@ -94,7 +85,7 @@ function sanitizeHTML(html, args) {
   }
 
   // Revert any async loading stylesheets to non-async so
-  // that critical can do its job.
+  // that Critical can do its job.
   //
   // For the purpose of this script, just set the media attr
   // to `screen` for all async-loaded styles.
@@ -109,7 +100,7 @@ function sanitizeHTML(html, args) {
     });
   }
 
-  const sanitizedHTML = $.html();
+  const preparedHTML = $.html();
 
-  return sanitizedHTML;
+  return preparedHTML;
 }
