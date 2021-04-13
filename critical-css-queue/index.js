@@ -8,17 +8,18 @@ module.exports = function (context, myQueueItem) {
   try {
     criticalHelper(
       args,
-      (err, {css}) => {
+      (err, criticalResponse) => {
         if (err) {
-          throw err;
+          context.log.error(err);
         } else {
-          context.log(css);
+          const { css } = criticalResponse;
+          context.log.info(css);
         }
 
         context.done();
       }
     );
   } catch (e) {
-    context.error(e);
+    context.log.error(e);
   }
 };
