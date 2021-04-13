@@ -30,7 +30,7 @@ module.exports = function(context, req) {
   } catch(e) {
     context.log(e);
     response.status = 500;
-    response.body.error = `Error: ${e.message}`;
+    response.body.error = e.message;
     response.body.input = req;
     context.res = response;
     context.done();
