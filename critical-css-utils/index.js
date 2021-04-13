@@ -49,7 +49,7 @@ module.exports = function(params, cb) {
 
   // Strip elements by CSS selector in source.exclude
   // so that Critical is forced to ignore them
-  if (args.exclude) {
+  if (args.hasOwnProperty('exclude')) {
     args.exclude.forEach((ignoreRule) => {
       const $ignoreElem = $(ignoreRule);
       if ($ignoreElem.length) {
