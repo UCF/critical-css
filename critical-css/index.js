@@ -2,14 +2,10 @@
 
 const criticalHelper = require('../critical-css-utils');
 
-const responseBase = {
-  status: 200,
-  headers: {
-    'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-    'Content-type': 'application/json'
-  },
-  body: {}
-}
+const responseHeaders = {
+  'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+  'Content-type': 'application/json'
+};
 
 
 module.exports = function(context, req) {
@@ -39,9 +35,14 @@ module.exports = function(context, req) {
  * @param {*} result The successful result to return
  */
 function returnSuccess(context, req, result) {
-  let response = responseBase;
-  response.body.result = result;
-  response.body.input  = req;
+  let response = {
+    status: 200,
+    headers: responseHeaders,
+    body: {
+      result: result,
+      input: req
+    }
+  };
 
   context.res = response;
   context.done();
@@ -56,12 +57,16 @@ function returnSuccess(context, req, result) {
  * @param {object} err The Error that should be returned
  */
 function returnError(context, req, err) {
-  context.log(err);
+  context.log.error(err);
 
-  let response = responseBase;
-  response.status     = 500;
-  response.body.error = err.message;
-  response.body.input = req;
+  let response = {
+    status: 500,
+    headers: responseHeaders,
+    body: {
+      error: err.message,
+      input: req
+    }
+  };
 
   context.res = response;
   context.done();
