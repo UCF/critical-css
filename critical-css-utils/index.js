@@ -6,15 +6,22 @@ const critical = require('critical');
 /**
  * Helper function that performs critical CSS generation
  *
- * @param {*} args The arguments to pass to Critical
+ * @param {*} params The arguments to pass to Critical
  * @param {function} cb The callback function
  */
-module.exports = function(args, cb) {
+module.exports = function(params, cb) {
+  const args = params || {};
+  const dimensions = args.dimensions || [];
+
+  if (! args.hasOwnProperty('html')) {
+    throw Error("Could not generate critical CSS--no HTML provided.")
+  }
+
   const criticalArgs = {
     inline: false,
     extract: false,
     minify: false,
-    dimensions: args.dimensions,
+    dimensions: dimensions,
     ignore: {
       atrule: ['@font-face'] // never include font-face declarations in our critical CSS
     },

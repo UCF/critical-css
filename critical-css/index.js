@@ -1,7 +1,6 @@
 'use strict';
 
-const cheerio = require('cheerio');
-const critical = require('critical');
+const criticalHelper = require('../critical-css-utils');
 
 module.exports = function(context, req) {
   let response = {
@@ -17,46 +16,28 @@ module.exports = function(context, req) {
   };
 
   const args = req.body.args || {};
-  const dimensions = args.dimensions || [];
+  try {
+    criticalHelper(
+      args,
+      (err, { css }) => {
+        if (err) {
+          context.error(err);
+          response.status = 500;
+          response.body.result = err;
+          context.res = response;
+        } else {
+          response.body.result = css;
+          context.res = response;
+        }
 
-  // If we're missing html, back out early
-  if (! args.hasOwnProperty('html')) {
+        context.done();
+    });
+  } catch(e) {
     response.status = 500;
-    response.body.result = 'Could not generate critical CSS--no HTML provided';
+    response.body.result = e;
     context.res = response;
     context.done();
   }
-
-  const criticalArgs = {
-    inline: false,
-    extract: false,
-    minify: true,
-    dimensions: dimensions,
-    ignore: {
-      atrule: ['@font-face'] // never include font-face declarations in our critical CSS
-    },
-    penthouse: {
-      timeout: 60000 // milliseconds/1 minute
-    }
-  };
-
-  criticalArgs.html = prepareHTML(args.html, args);
-
-  critical.generate(
-    criticalArgs,
-    (err, { css }) => {
-      if (err) {
-        context.error(err);
-        response.status = 500;
-        response.body.result = err;
-        context.res = response;
-      } else {
-        response.body.result = css;
-        context.res = response;
-      }
-
-      context.done();
-  });
 };
 
 /**
