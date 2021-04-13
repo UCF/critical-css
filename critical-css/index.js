@@ -9,10 +9,7 @@ module.exports = function(context, req) {
       'Access-Control-Allow-Origin': '*', // Required for CORS support to work
       'Content-type': 'application/json'
     },
-    body: {
-      result: null,
-      input: req,
-    },
+    body: {},
   };
 
   const args = req.body.args || {};
@@ -21,20 +18,20 @@ module.exports = function(context, req) {
       args,
       (err, { css }) => {
         if (err) {
-          context.error(err);
-          response.status = 500;
-          response.body.result = err;
-          context.res = response;
+          throw err;
         } else {
           response.body.result = css;
+          response.body.input = req;
           context.res = response;
         }
 
         context.done();
     });
   } catch(e) {
+    context.log(e);
     response.status = 500;
-    response.body.result = e;
+    response.body.error = `Error: ${e.message}`;
+    response.body.input = req;
     context.res = response;
     context.done();
   }

@@ -10,7 +10,7 @@ module.exports = function (context, myQueueItem) {
       args,
       (err, {css}) => {
         if (err) {
-          context.error(err);
+          throw err;
         } else {
           context.log(css);
         }

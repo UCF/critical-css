@@ -14,13 +14,13 @@ module.exports = function(params, cb) {
   const dimensions = args.dimensions || [];
 
   if (! args.hasOwnProperty('html')) {
-    throw Error("Could not generate critical CSS--no HTML provided.")
+    throw new Error('Could not generate critical CSS--no HTML provided.');
   }
 
   const criticalArgs = {
     inline: false,
     extract: false,
-    minify: false,
+    minify: true,
     dimensions: dimensions,
     ignore: {
       atrule: ['@font-face'] // never include font-face declarations in our critical CSS
