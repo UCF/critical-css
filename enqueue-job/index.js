@@ -9,7 +9,12 @@ module.exports = async function (context, req) {
 
   let argError = false;
 
-  if ( ! req.body || ! req.body.args ) {
+  if ( typeof req.body === "string"  ) {
+    response.status = 400;
+    response.body = 'The request body contains invalid JSON and cannot be processed'
+    argError = true;
+  }
+  else if ( ! req.body || ! req.body.args ) {
     response.status = 400;
     response.body = 'The request body must include the an args array with valid arguments'
     argError = true;
