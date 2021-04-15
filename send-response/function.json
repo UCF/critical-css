@@ -4,13 +4,6 @@
       "name": "myQueueItem",
       "type": "queueTrigger",
       "direction": "in",
-      "queueName": "critical-css-queue-items",
-      "connection": "AzureWebJobsStorage"
-    },
-    {
-      "type": "queue",
-      "direction": "out",
-      "name": "msg",
       "queueName": "critical-css-response-items",
       "connection": "AzureWebJobsStorage"
     }
