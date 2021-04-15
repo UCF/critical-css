@@ -11,25 +11,22 @@ const fetch = require('node-fetch');
  * @param {*} params The arguments to pass to Critical
  * @param {function} cb The callback function
  */
-module.exports = function(params, cb) {
-  const args = params || {};
+module.exports = async function(params, cb) {
+  const args       = params || {};
   const dimensions = args.dimensions || [];
+  const url        = args.url || '';
+  let html         = args.html || '';
 
-  // TODO update to account for url
-  const url = args.url || '';
-  let html  = args.html || '';
-
-  if (! html && ! url) {
+  // Back out early if we don't have HTML or a URL available to fetch from
+  if (!html && !url) {
     throw new Error('Could not generate critical CSS--no HTML or source URL provided.');
   }
 
-  if (! html && url) {
-    try {
-      html = fetchHTML(url);
-    } catch (error) {
-      throw error;
-    }
+  if (!html && url) {
+    html = await fetchHTML(url);
   }
+
+  html = prepareHTML(html, args);
 
   const criticalArgs = {
     inline: false,
@@ -41,21 +38,23 @@ module.exports = function(params, cb) {
     },
     penthouse: {
       timeout: 60000 // milliseconds/1 minute
-    }
+    },
+    html: html
   };
-
-  criticalArgs.html = prepareHTML(html, args);
 
   critical.generate(criticalArgs, cb);
 }
 
 
 /**
+ * Retrieves external HTML from the provided URL.
  *
+ * @param {string} url URL to retrieve HTML from
+ * @return {string} HTML content
  */
 async function fetchHTML(url) {
   const controller = new AbortController();
-  const timeout = 5000; // milliseconds/5 seconds TODO make this configurable?
+  const timeout = 5000; // milliseconds/5 seconds TODO make this configurable somewhere?
   const timeoutHandler = setTimeout(
     () => {
       controller.abort();
@@ -63,14 +62,22 @@ async function fetchHTML(url) {
     timeout
   );
 
-  const response = await fetch(url, {
-    signal: controller.signal
-  })
-    .finally(() => {
-      clearTimeout(timeoutHandler);
-    });
+  let html = '';
 
-  return response;
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal
+    })
+      .finally(() => {
+        clearTimeout(timeoutHandler);
+      });
+
+    html = await response.text();
+  } catch (error) {
+    throw error;
+  }
+
+  return html;
 }
 
 
