@@ -16,13 +16,7 @@ module.exports = async function (context, myQueueItem) {
   const responseUrl = myQueueItem.input.args.meta.response_url;
   const responseBody = myQueueItem;
 
-  const requestResult = await deliverResponse(responseUrl, responseBody);
-
-  const response = requestResult.html;
-  const responseError = requestResult.error;
-
-  context.log(response);
-  context.log(responseError);
+  await deliverResponse(responseUrl, responseBody, myQueueItem);
 };
 
 /**
@@ -31,7 +25,7 @@ module.exports = async function (context, myQueueItem) {
  * @param {object} body The body of the response
  * @return {object} Response and error, if present
  */
-async function deliverResponse( url, body ) {
+async function deliverResponse(url, body, myQueueItem) {
   const controller = new AbortController();
   const timeout = 5000;
   const timeoutHandler = setTimeout(
@@ -63,6 +57,15 @@ async function deliverResponse( url, body ) {
     (err) => {
       if (err.name === 'AbortError') {
         error = Error('Could not deliver response to provided response url--request timed out.');
+        if ( myQueueItem.hasOwnProperty('retry') ) {
+          myQueueItem.retry += 1;
+        } else {
+          myQueueItem.retry = 1;
+        }
+
+        if ( myQueueItem.retry <= 5 ) {
+          context.bindings.msg = myQueueItem;
+        }
       } else {
         error = err;
       }
