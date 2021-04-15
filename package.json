@@ -7,8 +7,10 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
+    "abort-controller": "^3.0.0",
     "cheerio": "*",
-    "critical": "^3.0.0"
+    "critical": "^3.0.0",
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {}
 }

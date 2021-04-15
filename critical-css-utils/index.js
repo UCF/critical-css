@@ -1,7 +1,9 @@
 'use strict';
 
+const AbortController = require('abort-controller');
 const cheerio = require('cheerio');
 const critical = require('critical');
+const fetch = require('node-fetch');
 
 /**
  * Helper function that performs critical CSS generation
@@ -13,8 +15,20 @@ module.exports = function(params, cb) {
   const args = params || {};
   const dimensions = args.dimensions || [];
 
-  if (! args.hasOwnProperty('html')) {
-    throw new Error('Could not generate critical CSS--no HTML provided.');
+  // TODO update to account for url
+  const url = args.url || '';
+  let html  = args.html || '';
+
+  if (! html && ! url) {
+    throw new Error('Could not generate critical CSS--no HTML or source URL provided.');
+  }
+
+  if (! html && url) {
+    try {
+      html = fetchHTML(url);
+    } catch (error) {
+      throw error;
+    }
   }
 
   const criticalArgs = {
@@ -30,9 +44,33 @@ module.exports = function(params, cb) {
     }
   };
 
-  criticalArgs.html = prepareHTML(args.html, args);
+  criticalArgs.html = prepareHTML(html, args);
 
   critical.generate(criticalArgs, cb);
+}
+
+
+/**
+ *
+ */
+async function fetchHTML(url) {
+  const controller = new AbortController();
+  const timeout = 5000; // milliseconds/5 seconds TODO make this configurable?
+  const timeoutHandler = setTimeout(
+    () => {
+      controller.abort();
+    },
+    timeout
+  );
+
+  const response = await fetch(url, {
+    signal: controller.signal
+  })
+    .finally(() => {
+      clearTimeout(timeoutHandler);
+    });
+
+  return response;
 }
 
 
