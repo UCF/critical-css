@@ -13,7 +13,7 @@ module.exports = function (context, myQueueItem) {
           returnError(context, myQueueItem, err);
         } else {
           const { css } = criticalResponse;
-          returnSuccess(context, req, css);
+          returnSuccess(context, myQueueItem, css);
         }
       });
   } catch (e) {
