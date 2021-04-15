@@ -95,7 +95,7 @@ async function fetchHTML(url) {
     .then((res) => {
       // Only continue if the response code looks successful
       if (res.ok) {
-        return res;
+        return res.text();
       } else {
         error = Error(`Could not generate critical CSS--status code ${res.status} was returned for the provided URL.`);
       }
