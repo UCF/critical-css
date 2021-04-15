@@ -26,7 +26,7 @@
                 "width": 1600
             }
         ],
-        "html": "<!DOCTYPE html><html><head><title>Test</title><link rel='stylesheet' href='https://cdn.ucf.edu/athena-framework/v1.0.8/css/framework.min.css'></head><body><div style='margin-bottom: 2000px;'>Hello</div><div class='jumbotron'>world</div></body></html>",
-        "url": null
+        "html": null,
+        "url": "https://www.ucf.edu"
     }
 }
