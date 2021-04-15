@@ -57,8 +57,6 @@ function returnSuccess(context, req, result) {
  * @param {object} err The Error that should be returned
  */
 function returnError(context, req, err) {
-  context.log.error(err);
-
   let response = {
     status: 500,
     headers: responseHeaders,

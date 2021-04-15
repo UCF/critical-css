@@ -19,11 +19,35 @@ module.exports = async function(params, cb) {
 
   // Back out early if we don't have HTML or a URL available to fetch from
   if (!html && !url) {
-    throw new Error('Could not generate critical CSS--no HTML or source URL provided.');
+    cb(
+      Error('Could not generate critical CSS--no HTML or source URL provided.'),
+      null
+    );
   }
 
+  // Try to retrieve HTML from the provided URL if HTML isn't provided directly
   if (!html && url) {
-    html = await fetchHTML(url);
+    let fetchError = null;
+
+    try {
+      const fetchResult = await fetchHTML(url);
+      html = fetchResult.html;
+      fetchError = fetchResult.error;
+    } catch(e) {
+      cb(e, null);
+    }
+
+    if (fetchError) {
+      cb(fetchError, null);
+    }
+  }
+
+  // Back out now if we still don't have HTML to work with
+  if (!html) {
+    cb(
+      Error('Could not generate critical CSS--a successful response could not be retrieved from the provided URL.'),
+      null
+    );
   }
 
   html = prepareHTML(html, args);
@@ -50,7 +74,7 @@ module.exports = async function(params, cb) {
  * Retrieves external HTML from the provided URL.
  *
  * @param {string} url URL to retrieve HTML from
- * @return {string} HTML content
+ * @return {object} HTML content and error, if present
  */
 async function fetchHTML(url) {
   const controller = new AbortController();
@@ -63,21 +87,39 @@ async function fetchHTML(url) {
   );
 
   let html = '';
+  let error = null;
 
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal
+  const response = await fetch(url, {
+    signal: controller.signal
+  })
+    .then((res) => {
+      // Only continue if the response code looks successful
+      if (res.ok) {
+        return res;
+      } else {
+        error = Error(`Could not generate critical CSS--status code ${res.status} was returned for the provided URL.`);
+      }
     })
-      .finally(() => {
-        clearTimeout(timeoutHandler);
-      });
+    .then(
+      (body) => {
+        html = body;
+      },
+      (err) => {
+        if (err.name === 'AbortError') {
+          error = Error('Could not generate critical CSS--request timed out for the provided URL.');
+        } else {
+          error = err;
+        }
+      }
+    )
+    .finally(() => {
+      clearTimeout(timeoutHandler);
+    });
 
-    html = await response.text();
-  } catch (error) {
-    throw error;
-  }
-
-  return html;
+  return {
+    html: html,
+    error: error
+  };
 }
 
 
@@ -89,6 +131,8 @@ async function fetchHTML(url) {
  * @returns {string} Processed HTML
  */
  function prepareHTML(html, args) {
+  if (!html) return '';
+
   // Load document into Cheerio for easier DOM processing/traversal
   const $ = cheerio.load(html);
 
