@@ -1,0 +1,32 @@
+{
+    "args": {
+        "exclude": [
+            "style#critical-css",
+            "link[rel='stylesheet'][href^='//cloud.typography.com/']"
+        ],
+        "dimensions": [
+            {
+                "height": 900,
+                "width": 575
+            },
+            {
+                "height": 1024,
+                "width": 767
+            },
+            {
+                "height": 1366,
+                "width": 991
+            },
+            {
+                "height": 800,
+                "width": 1199
+            },
+            {
+                "height": 1000,
+                "width": 1600
+            }
+        ],
+        "html": "<!DOCTYPE html><html><head><title>Test</title><link rel='stylesheet' href='https://cdn.ucf.edu/athena-framework/v1.0.8/css/framework.min.css'></head><body><div style='margin-bottom: 2000px;'>Hello</div><div class='jumbotron'>world</div></body></html>",
+        "url": null
+    }
+}
