@@ -89,7 +89,7 @@ async function fetchHTML(url) {
   let html = '';
   let error = null;
 
-  const response = await fetch(url, {
+  await fetch(url, {
     signal: controller.signal
   })
     .then((res) => {
