@@ -10,16 +10,49 @@ module.exports = function (context, myQueueItem) {
       args,
       (err, criticalResponse) => {
         if (err) {
-          context.log.error(err);
+          returnError(context, myQueueItem, err);
         } else {
           const { css } = criticalResponse;
-          context.log.info(css);
+          returnSuccess(context, myQueueItem, css);
         }
-
-        context.done();
-      }
-    );
+      });
   } catch (e) {
-    context.log.error(e);
+    returnError(context, myQueueItem, e);
   }
 };
+
+/**
+ * Helper function that returns a successful context
+ *
+ * @param {object} context The request context passed to the function handler
+ * @param {object} myQueueItem Queue item passed into the handler
+ * @param {*} result The successful result to return
+ */
+function returnSuccess(context, myQueueItem, result) {
+  let response = {
+    result: result,
+    input: myQueueItem
+  };
+
+  context.bindings.msg = response;
+  context.done();
+}
+
+/**
+ * Helper function that returns a successful context
+ *
+ * @param {object} context The request context passed to the function handler
+ * @param {object} myQueueItem Queue item passed into the handler
+ * @param {*} result The successful result to return
+ */
+function returnError(context, myQueueItem, err) {
+  context.log.error(err);
+
+  let response = {
+    error: err.message,
+    input: myQueueItem
+  };
+
+  context.bindings.msg = response;
+  context.done();
+}

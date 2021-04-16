@@ -1,7 +1,9 @@
 'use strict';
 
+const AbortController = require('abort-controller');
 const cheerio = require('cheerio');
 const critical = require('critical');
+const fetch = require('node-fetch');
 
 /**
  * Helper function that performs critical CSS generation
@@ -9,13 +11,46 @@ const critical = require('critical');
  * @param {*} params The arguments to pass to Critical
  * @param {function} cb The callback function
  */
-module.exports = function(params, cb) {
-  const args = params || {};
+module.exports = async function(params, cb) {
+  const args       = params || {};
   const dimensions = args.dimensions || [];
+  const url        = args.url || '';
+  let html         = args.html || '';
 
-  if (! args.hasOwnProperty('html')) {
-    throw new Error('Could not generate critical CSS--no HTML provided.');
+  // Back out early if we don't have HTML or a URL available to fetch from
+  if (!html && !url) {
+    cb(
+      Error('Could not generate critical CSS--no HTML or source URL provided.'),
+      null
+    );
   }
+
+  // Try to retrieve HTML from the provided URL if HTML isn't provided directly
+  if (!html && url) {
+    let fetchError = null;
+
+    try {
+      const fetchResult = await fetchHTML(url);
+      html = fetchResult.html;
+      fetchError = fetchResult.error;
+    } catch(e) {
+      cb(e, null);
+    }
+
+    if (fetchError) {
+      cb(fetchError, null);
+    }
+  }
+
+  // Back out now if we still don't have HTML to work with
+  if (!html) {
+    cb(
+      Error('Could not generate critical CSS--a successful response could not be retrieved from the provided URL.'),
+      null
+    );
+  }
+
+  html = prepareHTML(html, args);
 
   const criticalArgs = {
     inline: false,
@@ -27,12 +62,64 @@ module.exports = function(params, cb) {
     },
     penthouse: {
       timeout: 60000 // milliseconds/1 minute
-    }
+    },
+    html: html
   };
 
-  criticalArgs.html = prepareHTML(args.html, args);
-
   critical.generate(criticalArgs, cb);
+}
+
+
+/**
+ * Retrieves external HTML from the provided URL.
+ *
+ * @param {string} url URL to retrieve HTML from
+ * @return {object} HTML content and error, if present
+ */
+async function fetchHTML(url) {
+  const controller = new AbortController();
+  const timeout = 5000; // milliseconds/5 seconds TODO make this configurable somewhere?
+  const timeoutHandler = setTimeout(
+    () => {
+      controller.abort();
+    },
+    timeout
+  );
+
+  let html = '';
+  let error = null;
+
+  await fetch(url, {
+    signal: controller.signal
+  })
+    .then((res) => {
+      // Only continue if the response code looks successful
+      if (res.ok) {
+        return res.text();
+      } else {
+        error = Error(`Could not generate critical CSS--status code ${res.status} was returned for the provided URL.`);
+      }
+    })
+    .then(
+      (body) => {
+        html = body;
+      },
+      (err) => {
+        if (err.name === 'AbortError') {
+          error = Error('Could not generate critical CSS--request timed out for the provided URL.');
+        } else {
+          error = err;
+        }
+      }
+    )
+    .finally(() => {
+      clearTimeout(timeoutHandler);
+    });
+
+  return {
+    html: html,
+    error: error
+  };
 }
 
 
@@ -44,6 +131,8 @@ module.exports = function(params, cb) {
  * @returns {string} Processed HTML
  */
  function prepareHTML(html, args) {
+  if (!html) return '';
+
   // Load document into Cheerio for easier DOM processing/traversal
   const $ = cheerio.load(html);
 
