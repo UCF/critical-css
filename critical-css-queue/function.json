@@ -4,14 +4,14 @@
       "name": "myQueueItem",
       "type": "queueTrigger",
       "direction": "in",
-      "queueName": "critical-css-queue-items",
+      "queueName": "ucf-use2-net-ccss-items-stq-001",
       "connection": "AzureWebJobsStorage"
     },
     {
       "type": "queue",
       "direction": "out",
       "name": "msg",
-      "queueName": "critical-css-response-items",
+      "queueName": "ucf-use2-net-ccss-response-stq-001",
       "connection": "AzureWebJobsStorage"
     }
   ]
