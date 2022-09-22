@@ -4,7 +4,7 @@
       "name": "myQueueItem",
       "type": "queueTrigger",
       "direction": "in",
-      "queueName": "critical-css-response-items",
+      "queueName": "ucf-use2-net-ccss-response-stq-001",
       "connection": "AzureWebJobsStorage"
     }
   ]
